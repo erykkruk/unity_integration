@@ -47,7 +47,7 @@ A Flutter plugin for **Unity 3D** integration. Typed bridge communication, lifec
 ```yaml
 # pubspec.yaml
 dependencies:
-  unity_kit: ^0.9.0
+  unity_kit: ^0.9.1
 ```
 
 ```dart

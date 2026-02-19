@@ -1,7 +1,7 @@
 name: unity_kit_example
 description: Example app showcasing the full unity_kit API.
 publish_to: 'none'
-version: 0.9.0+1
+version: 0.9.1+1
 
 environment:
   sdk: ">=3.2.0 <4.0.0"

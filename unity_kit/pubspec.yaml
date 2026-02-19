@@ -1,6 +1,6 @@
 name: unity_kit
 description: Flutter plugin for Unity 3D integration — typed bridge, lifecycle management, and communication layer.
-version: 0.9.0
+version: 0.9.1
 
 homepage: https://github.com/erykkruk/flutter_unity_kit
 repository: https://github.com/erykkruk/flutter_unity_kit

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'unity_kit'
-  s.version          = '0.9.0'
+  s.version          = '0.9.1'
   s.summary          = 'Flutter plugin for Unity 3D integration'
   s.homepage         = 'https://github.com/erykkruk/unity_kit'
   s.license          = { :type => 'MIT' }
