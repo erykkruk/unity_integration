@@ -2,7 +2,6 @@
 .claude/
 test/
 internal_doc/
-models/
 *.DS_Store
 .vscode/
 CLAUDE.md
