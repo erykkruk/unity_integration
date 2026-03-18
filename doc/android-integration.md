@@ -223,10 +223,37 @@ class UnityContainerLayout(context: Context) : FrameLayout(context) {
 
 ## PlatformView Mode (Dart Side)
 
-On the Dart/Flutter side, use `AndroidView` (Virtual Display mode) to embed the native Unity view:
+On the Dart/Flutter side, use `PlatformViewLink` + `initExpensiveAndroidView` (Hybrid Composition) to embed the native Unity view:
 
 ```dart
-// Correct: AndroidView with Virtual Display
+// Correct: Hybrid Composition via PlatformViewLink
+PlatformViewLink(
+  viewType: 'com.unity_kit/unity_view',
+  surfaceFactory: (context, controller) {
+    return AndroidViewSurface(
+      controller: controller as AndroidViewController,
+      hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+      gestureRecognizers: gestureRecognizers,
+    );
+  },
+  onCreatePlatformView: (params) {
+    return PlatformViewsService.initExpensiveAndroidView(
+      id: params.id,
+      viewType: viewType,
+      layoutDirection: TextDirection.ltr,
+      creationParams: creationParams,
+      creationParamsCodec: const StandardMessageCodec(),
+    )
+      ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+      ..create();
+  },
+)
+```
+
+**Do NOT use `AndroidView` (Virtual Display mode):**
+
+```dart
+// WRONG: Unity SurfaceView renders on top of all Flutter widgets
 AndroidView(
   viewType: 'com.unity_kit/unity_view',
   creationParams: config.toMap(),
@@ -234,28 +261,9 @@ AndroidView(
 )
 ```
 
-**Do NOT use `PlatformViewLink` + `initExpensiveAndroidView`:**
+Virtual Display renders the native view into an offscreen texture, but Unity's `SurfaceView` bypasses this and creates its own window surface directly on screen. This causes the Unity view to cover all Flutter content regardless of layout bounds ([#1](https://github.com/erykkruk/flutter_unity_kit/issues/1)).
 
-```dart
-// WRONG: causes app freeze
-PlatformViewLink(
-  viewType: 'com.unity_kit/unity_view',
-  surfaceFactory: (context, controller) {
-    return AndroidViewSurface(
-      controller: controller as AndroidViewController,
-      gestureRecognizers: const {},
-      hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-    );
-  },
-  onCreatePlatformView: (params) {
-    return PlatformViewsService.initExpensiveAndroidView(
-      // ... this causes the app to freeze
-    );
-  },
-)
-```
-
-The `initExpensiveAndroidView` path creates a Hybrid Composition platform view that conflicts with Unity's rendering pipeline, causing the entire app to freeze.
+Hybrid Composition places the native view directly in the Android view hierarchy, which correctly respects z-ordering and widget bounds. A delayed re-focus (500ms post-attachment) ensures Unity's rendering pipeline activates after HC finishes surface setup.
 
 ---
 
@@ -683,11 +691,11 @@ The full initialization sequence on Android:
 
 **Fix:** Override `dispatchTouchEvent` to fix `deviceId` and set `source`.
 
-### App freeze with PlatformViewLink
+### Unity view covers all Flutter widgets
 
-**Cause:** Using `initExpensiveAndroidView` (Hybrid Composition) instead of `AndroidView` (Virtual Display).
+**Cause:** Using `AndroidView` (Virtual Display). Unity's `SurfaceView` bypasses the offscreen texture and renders directly on screen.
 
-**Fix:** Use `AndroidView` on the Dart side.
+**Fix:** Use `PlatformViewLink` + `initExpensiveAndroidView` (Hybrid Composition) with a delayed re-focus after attachment. Fixed in v0.9.2.
 
 ### Frozen rendering after orientation change
 

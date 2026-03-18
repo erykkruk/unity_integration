@@ -331,6 +331,8 @@ Open **Edit > Project Settings > Player**:
 | Target Architectures | ARM64 (+ ARMv7 optional) | Flutter requires ARM64 |
 | Minimum API Level | 24 | Flutter minimum |
 
+> **IMPORTANT: ARM64 is required.** Most modern Android devices are 64-bit (arm64-v8a). If you only export ARMv7, the Unity player will fail to initialize on arm64 devices — the app launches but the Unity view never loads (you will see `Unity view not available after N attempts` in logcat). Always enable ARM64 in Target Architectures. ARMv7 can be added alongside it for older 32-bit device support, but ARM64 alone is sufficient for most use cases.
+
 **iOS:**
 
 | Setting | Value | Why |
@@ -704,6 +706,14 @@ Attach to FlutterBridge GameObject. Requires `ADDRESSABLES_INSTALLED` scripting 
 ---
 
 ## Troubleshooting
+
+### Unity view never loads on Android (stuck on placeholder)
+
+The app launches but Unity never becomes ready. Logcat shows `Unity view not available after N attempts`.
+
+**Cause:** Unity was exported with only ARMv7 (32-bit) architecture, but the device is arm64 (64-bit). The native `.so` libraries cannot load.
+
+**Fix:** In Unity Editor: **Edit > Project Settings > Player > Android > Other Settings > Target Architectures** — enable **ARM64**. Re-export and redeploy.
 
 ### No "Flutter" menu in Unity Editor
 

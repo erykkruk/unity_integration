@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-03-18
+
+### Fixed
+
+- **Android display bug:** Unity view no longer renders on top of all Flutter widgets, covering the entire screen regardless of layout bounds ([#1](https://github.com/erykkruk/flutter_unity_kit/issues/1)).
+  - Switched Android rendering from Virtual Display (`AndroidView`) to Hybrid Composition (`PlatformViewLink` + `initExpensiveAndroidView`) for correct z-ordering and bounds clipping.
+  - Applied `setZOrderOnTop(false)` on Unity's `SurfaceView` after attachment.
+  - Added delayed re-focus (500ms) to ensure rendering starts after Hybrid Composition finishes surface setup.
+
+### Documentation
+
+- Added ARM64 export requirement to unity-export.md — exporting only ARMv7 causes Unity player to silently fail on arm64 devices.
+- Added troubleshooting entry for "Unity view never loads on Android".
+
 ## [0.9.1] - 2026-02-20
 
 ### Fixed

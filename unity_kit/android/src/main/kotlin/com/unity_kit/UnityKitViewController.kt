@@ -8,7 +8,9 @@ import android.os.Looper
 import android.util.Log
 import android.view.InputDevice
 import android.view.MotionEvent
+import android.view.SurfaceView
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
@@ -344,6 +346,11 @@ class UnityKitViewController(
             ),
         )
 
+        // Fix Android display bug: Unity's SurfaceView renders on top of all
+        // Flutter widgets by default, ignoring widget bounds and z-ordering.
+        // Setting setZOrderOnTop(false) forces it to render within its container.
+        applyZOrderFix(unityView)
+
         isAttached = true
 
         // Activate Unity rendering: windowFocusChanged + pause/resume
@@ -351,6 +358,17 @@ class UnityKitViewController(
 
         // Force layout pass
         containerView.requestLayout()
+
+        // Delayed re-activation for Hybrid Composition mode.
+        // HC manages the view hierarchy differently than Virtual Display;
+        // the initial focus() may fire before HC finishes surface setup.
+        // A delayed re-focus ensures rendering starts after HC is ready.
+        mainHandler.postDelayed({
+            if (!isDisposed && isAttached) {
+                UnityPlayerManager.focus()
+                containerView.invalidate()
+            }
+        }, 500)
 
         Log.d(TAG, "Unity view attached to container for viewId=$viewId")
     }
@@ -360,6 +378,31 @@ class UnityKitViewController(
         containerView.setOnTouchListener(null)
         containerView.removeAllViews()
         isAttached = false
+    }
+
+    /// Fixes Unity's SurfaceView Z-order so it renders within its container
+    /// instead of floating on top of all Flutter widgets (Issue #1).
+    private fun applyZOrderFix(view: View) {
+        val surfaceView = findSurfaceView(view)
+        if (surfaceView != null) {
+            surfaceView.setZOrderOnTop(false)
+            surfaceView.setZOrderMediaOverlay(false)
+            Log.d(TAG, "Applied Z-order fix to SurfaceView")
+        } else {
+            Log.d(TAG, "No SurfaceView found in Unity view hierarchy, Z-order fix skipped")
+        }
+    }
+
+    /// Recursively searches for a [SurfaceView] in the view hierarchy.
+    private fun findSurfaceView(view: View): SurfaceView? {
+        if (view is SurfaceView) return view
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                val found = findSurfaceView(view.getChildAt(i))
+                if (found != null) return found
+            }
+        }
+        return null
     }
 
     // --- Touch Fix (AND-C2) ---

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -168,14 +169,35 @@ class _UnityViewState extends State<UnityView> {
       'targetFrameRate': widget.config.targetFrameRate,
     };
 
+    final gestureRecognizers = widget.gestureRecognizers ??
+        const <Factory<OneSequenceGestureRecognizer>>{};
+
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return AndroidView(
+        // Hybrid Composition ensures Unity's SurfaceView renders within
+        // its Flutter widget bounds instead of covering the entire screen.
+        // Virtual Display (default AndroidView) causes z-order issues
+        // where Unity floats on top of all Flutter content (Issue #1).
+        return PlatformViewLink(
           viewType: _viewType,
-          creationParams: creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
-          gestureRecognizers: widget.gestureRecognizers ??
-              const <Factory<OneSequenceGestureRecognizer>>{},
+          surfaceFactory: (context, controller) {
+            return AndroidViewSurface(
+              controller: controller as AndroidViewController,
+              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+              gestureRecognizers: gestureRecognizers,
+            );
+          },
+          onCreatePlatformView: (params) {
+            return PlatformViewsService.initExpensiveAndroidView(
+              id: params.id,
+              viewType: _viewType,
+              layoutDirection: TextDirection.ltr,
+              creationParams: creationParams,
+              creationParamsCodec: const StandardMessageCodec(),
+            )
+              ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+              ..create();
+          },
         );
       case TargetPlatform.iOS:
         return UiKitView(
