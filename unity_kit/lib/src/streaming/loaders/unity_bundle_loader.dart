@@ -77,4 +77,14 @@ class UnityBundleLoader extends UnityAssetLoader {
       {'bundleName': key},
     );
   }
+
+  @override
+  UnityMessage loadContentCatalogMessage({
+    required String url,
+    required String callbackId,
+  }) {
+    throw UnsupportedError(
+      'LoadContentCatalog is not supported by raw AssetBundle loader',
+    );
+  }
 }

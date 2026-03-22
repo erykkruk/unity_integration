@@ -58,6 +58,12 @@ abstract class UnityAssetLoader {
   /// Request Unity to unload an asset by [key].
   UnityMessage unloadAssetMessage(String key);
 
+  /// Request Unity to load a remote content catalog by [url].
+  UnityMessage loadContentCatalogMessage({
+    required String url,
+    required String callbackId,
+  });
+
   /// Send the cache path to Unity via the bridge.
   Future<void> setCachePath(UnityBridge bridge, String cachePath) async {
     await bridge.sendWhenReady(setCachePathMessage(cachePath));
@@ -92,5 +98,17 @@ abstract class UnityAssetLoader {
   /// Send an unload asset request to Unity via the bridge.
   Future<void> unloadAsset(UnityBridge bridge, String key) async {
     await bridge.sendWhenReady(unloadAssetMessage(key));
+  }
+
+  /// Send a load content catalog request to Unity via the bridge.
+  Future<void> loadContentCatalog(
+    UnityBridge bridge, {
+    required String url,
+    required String callbackId,
+  }) async {
+    await bridge.sendWhenReady(loadContentCatalogMessage(
+      url: url,
+      callbackId: callbackId,
+    ));
   }
 }

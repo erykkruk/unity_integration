@@ -74,6 +74,16 @@ namespace UnityKit
     }
 
     /// <summary>
+    /// Request to load a remote content catalog by URL.
+    /// </summary>
+    [Serializable]
+    public class LoadContentCatalogRequest
+    {
+        public string url;
+        public string callbackId;
+    }
+
+    /// <summary>
     /// Error response sent to Flutter when an operation fails.
     /// </summary>
     [Serializable]
@@ -112,6 +122,7 @@ namespace UnityKit
     ///   <item><c>LoadScene</c>    - load a scene (Single / Additive)</item>
     ///   <item><c>UnloadAsset</c>  - release an asset by key</item>
     ///   <item><c>UpdateCatalog</c>- refresh the Addressables catalog</item>
+    ///   <item><c>LoadContentCatalog</c> - load a remote content catalog by URL</item>
     /// </list>
     /// </para>
     /// </summary>
@@ -136,6 +147,7 @@ namespace UnityKit
         private const string METHOD_LOAD_SCENE = "LoadScene";
         private const string METHOD_UNLOAD_ASSET = "UnloadAsset";
         private const string METHOD_UPDATE_CATALOG = "UpdateCatalog";
+        private const string METHOD_LOAD_CONTENT_CATALOG = "LoadContentCatalog";
 
         private const string STATUS_LOADING = "loading";
         private const string STATUS_LOADING_SCENE = "loading_scene";
@@ -152,6 +164,7 @@ namespace UnityKit
 
         private string _cachePath;
         private bool _isInitialized;
+        private string _loadedCatalogUrl;
 
         /// <summary>Whether the manager has been initialised with a cache path.</summary>
         public bool IsInitialized => _isInitialized;
@@ -218,6 +231,10 @@ namespace UnityKit
                     StartCoroutine(UpdateCatalogCoroutine(data));
                     break;
 
+                case METHOD_LOAD_CONTENT_CATALOG:
+                    HandleLoadContentCatalog(data);
+                    break;
+
                 default:
                     Debug.LogWarning($"{LOG_PREFIX}: Unknown method '{method}'");
                     break;
@@ -258,6 +275,38 @@ namespace UnityKit
             }
 
             StartCoroutine(LoadSceneCoroutine(request.sceneName, request.callbackId, request.loadMode));
+        }
+
+        private void HandleLoadContentCatalog(string data)
+        {
+            var request = JsonUtility.FromJson<LoadContentCatalogRequest>(data);
+            if (request == null)
+            {
+                Debug.LogError($"{LOG_PREFIX}: Failed to parse LoadContentCatalogRequest");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(request.url))
+            {
+                SendError(request.callbackId, "Catalog URL cannot be null or empty", "invalid_argument");
+                return;
+            }
+
+            if (_loadedCatalogUrl == request.url)
+            {
+                Debug.Log($"{LOG_PREFIX}: Catalog already loaded from this URL, skipping");
+                var response = new AssetLoadedResponse
+                {
+                    callbackId = request.callbackId,
+                    key = request.url,
+                    success = true,
+                    error = "",
+                };
+                NativeAPI.SendToFlutter(JsonUtility.ToJson(response));
+                return;
+            }
+
+            StartCoroutine(LoadContentCatalogCoroutine(request.url, request.callbackId));
         }
 
         // -------------------------------------------------------------------
@@ -416,6 +465,44 @@ namespace UnityKit
         }
 
         // -------------------------------------------------------------------
+        // Load content catalog
+        // -------------------------------------------------------------------
+
+        private IEnumerator LoadContentCatalogCoroutine(string url, string callbackId)
+        {
+            Debug.Log($"{LOG_PREFIX}: Loading content catalog from: {url}");
+
+            var handle = Addressables.LoadContentCatalogAsync(url);
+
+            while (!handle.IsDone)
+            {
+                SendProgress(callbackId, handle.PercentComplete, STATUS_LOADING);
+                yield return null;
+            }
+
+            var succeeded = handle.Status == AsyncOperationStatus.Succeeded;
+
+            if (succeeded)
+            {
+                _loadedCatalogUrl = url;
+                Debug.Log($"{LOG_PREFIX}: Content catalog loaded successfully");
+            }
+            else
+            {
+                Debug.LogError($"{LOG_PREFIX}: Failed to load content catalog: {handle.OperationException?.Message}");
+            }
+
+            var response = new AssetLoadedResponse
+            {
+                callbackId = callbackId,
+                key = url,
+                success = succeeded,
+                error = succeeded ? "" : (handle.OperationException?.Message ?? "Unknown error"),
+            };
+            NativeAPI.SendToFlutter(JsonUtility.ToJson(response));
+        }
+
+        // -------------------------------------------------------------------
         // Update catalog
         // -------------------------------------------------------------------
 
@@ -458,6 +545,13 @@ namespace UnityKit
         private void UnloadAsset(string key)
         {
             Debug.LogWarning($"{LOG_PREFIX}: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot unload asset '{key}'.");
+        }
+
+        private IEnumerator LoadContentCatalogCoroutine(string url, string callbackId)
+        {
+            Debug.LogWarning($"{LOG_PREFIX}: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot load content catalog.");
+            SendError(callbackId, ERROR_ADDRESSABLES_NOT_INSTALLED, ERROR_TYPE_NOT_INSTALLED);
+            yield break;
         }
 
         private IEnumerator UpdateCatalogCoroutine(string catalogUrl)

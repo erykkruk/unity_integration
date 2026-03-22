@@ -1,26 +1,16 @@
 import '../../models/unity_message.dart';
 import '../unity_asset_loader.dart';
 
-/// Unity GameObject name for the C# Addressables manager.
+/// Unity target name for the C# Addressables manager.
 const String _kTargetName = 'FlutterAddressablesManager';
 
-/// Asset loader that communicates with Unity Addressables.
+/// Asset loader that communicates with Unity Addressables via MessageRouter.
 ///
-/// Sends messages to the `FlutterAddressablesManager` C# MonoBehaviour
-/// which loads assets via `Addressables.LoadAssetAsync` and scenes via
-/// `Addressables.LoadSceneAsync`.
+/// Sends routed messages through `FlutterBridge` which dispatches them
+/// to the `FlutterAddressablesManager` C# MonoBehaviour via [MessageRouter].
 ///
 /// This is the default loader used by [StreamingController] when no
 /// explicit `assetLoader` is provided.
-///
-/// Example:
-/// ```dart
-/// const loader = UnityAddressablesLoader();
-/// final message = loader.loadAssetMessage(
-///   key: 'characters',
-///   callbackId: 'load_characters',
-/// );
-/// ```
 class UnityAddressablesLoader extends UnityAssetLoader {
   /// Creates a [UnityAddressablesLoader].
   const UnityAddressablesLoader();
@@ -30,7 +20,7 @@ class UnityAddressablesLoader extends UnityAssetLoader {
 
   @override
   UnityMessage setCachePathMessage(String cachePath) {
-    return UnityMessage.to(
+    return UnityMessage.routed(
       _kTargetName,
       'SetCachePath',
       {'path': cachePath},
@@ -42,7 +32,7 @@ class UnityAddressablesLoader extends UnityAssetLoader {
     required String key,
     required String callbackId,
   }) {
-    return UnityMessage.to(
+    return UnityMessage.routed(
       _kTargetName,
       'LoadAsset',
       {
@@ -58,7 +48,7 @@ class UnityAddressablesLoader extends UnityAssetLoader {
     required String callbackId,
     required String loadMode,
   }) {
-    return UnityMessage.to(
+    return UnityMessage.routed(
       _kTargetName,
       'LoadScene',
       {
@@ -71,10 +61,25 @@ class UnityAddressablesLoader extends UnityAssetLoader {
 
   @override
   UnityMessage unloadAssetMessage(String key) {
-    return UnityMessage.to(
+    return UnityMessage.routed(
       _kTargetName,
       'UnloadAsset',
       {'key': key},
+    );
+  }
+
+  @override
+  UnityMessage loadContentCatalogMessage({
+    required String url,
+    required String callbackId,
+  }) {
+    return UnityMessage.routed(
+      _kTargetName,
+      'LoadContentCatalog',
+      {
+        'url': url,
+        'callbackId': callbackId,
+      },
     );
   }
 }

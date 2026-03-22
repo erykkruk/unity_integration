@@ -18,6 +18,7 @@ class ContentManifest {
     required this.version,
     required this.baseUrl,
     required this.bundles,
+    this.catalogUrl,
     this.metadata,
     this.buildTime,
     this.platform,
@@ -33,6 +34,7 @@ class ContentManifest {
             (e) => ContentBundle.fromJson(e! as Map<String, dynamic>),
           )
           .toList(),
+      catalogUrl: json['catalogUrl'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>?,
       buildTime: json['buildTime'] != null
           ? DateTime.parse(json['buildTime'] as String)
@@ -46,6 +48,11 @@ class ContentManifest {
 
   /// Base URL that bundle URLs are relative to.
   final String baseUrl;
+
+  /// URL of the Addressables content catalog (.bin file).
+  /// When present, Unity loads the catalog directly and handles bundle
+  /// downloads internally via Addressables.
+  final String? catalogUrl;
 
   /// All content bundles described by this manifest.
   final List<ContentBundle> bundles;
@@ -129,6 +136,7 @@ class ContentManifest {
     return {
       'version': version,
       'baseUrl': baseUrl,
+      if (catalogUrl != null) 'catalogUrl': catalogUrl,
       'bundles': bundles.map((b) => b.toJson()).toList(),
       if (metadata != null) 'metadata': metadata,
       if (buildTime != null) 'buildTime': buildTime!.toIso8601String(),

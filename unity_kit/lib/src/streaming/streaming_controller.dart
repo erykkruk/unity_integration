@@ -146,6 +146,17 @@ class StreamingController {
 
       await _assetLoader.setCachePath(_bridge, _cacheManager.cachePath);
 
+      if (_manifest!.catalogUrl != null) {
+        await _assetLoader.loadContentCatalog(
+          _bridge,
+          url: _manifest!.catalogUrl!,
+          callbackId: 'catalog_load',
+        );
+        UnityKitLogger.instance.info(
+          'Sent LoadContentCatalog: ${_manifest!.catalogUrl}',
+        );
+      }
+
       _setState(StreamingState.ready);
       UnityKitLogger.instance.info('StreamingController initialized');
     } catch (e, stackTrace) {
@@ -208,6 +219,10 @@ class StreamingController {
 
   /// Load a single bundle: download if not cached, then tell Unity to load it.
   ///
+  /// When a [ContentManifest.catalogUrl] is set, Unity handles bundle
+  /// downloads internally via Addressables. The asset is loaded by its
+  /// Addressable key (extracted from the bundle filename).
+  ///
   /// Emits a [StreamingError] with [StreamingErrorType.bundleNotFound] if the
   /// bundle name does not exist in the manifest.
   Future<void> loadBundle(String bundleName) async {
@@ -222,17 +237,37 @@ class StreamingController {
       return;
     }
 
-    if (!_cacheManager.isCached(bundleName)) {
-      await _downloadBundle(bundle);
+    final useRemoteCatalog = _manifest!.catalogUrl != null;
+
+    if (useRemoteCatalog) {
+      // Unity handles downloads via Addressables — load by addressable key.
+      final addressableKey = extractAddressableKey(bundleName);
+
+      await _assetLoader.loadAsset(
+        _bridge,
+        key: addressableKey,
+        callbackId: 'load_$bundleName',
+      );
+
+      UnityKitLogger.instance.debug(
+        'Requested Unity to load asset: $addressableKey (bundle: $bundleName)',
+      );
+    } else {
+      // Flutter-managed downloads — download then load by bundle name.
+      if (!_cacheManager.isCached(bundleName)) {
+        await _downloadBundle(bundle);
+      }
+
+      await _assetLoader.loadAsset(
+        _bridge,
+        key: bundleName,
+        callbackId: 'load_$bundleName',
+      );
+
+      UnityKitLogger.instance.debug(
+        'Requested Unity to load asset: $bundleName',
+      );
     }
-
-    await _assetLoader.loadAsset(
-      _bridge,
-      key: bundleName,
-      callbackId: 'load_$bundleName',
-    );
-
-    UnityKitLogger.instance.debug('Requested Unity to load asset: $bundleName');
   }
 
   /// Load a Unity scene by name.
@@ -307,6 +342,22 @@ class StreamingController {
     await _stateController.close();
 
     UnityKitLogger.instance.debug('StreamingController disposed');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Addressable key extraction
+  // ---------------------------------------------------------------------------
+
+  /// Extracts the Addressable address from a bundle filename.
+  ///
+  /// Bundle format: `toys_assets_{address}_{32hexhash}.bundle`
+  /// Example: `toys_assets_lightsaber_3f71d67081ae536817cceba29b951a9d.bundle`
+  ///       -> `lightsaber`
+  static String extractAddressableKey(String bundleName) {
+    var name = bundleName.replaceAll('.bundle', '');
+    name = name.replaceFirst(RegExp(r'_[a-f0-9]{32}$'), '');
+    name = name.replaceFirst(RegExp(r'^toys_assets_'), '');
+    return name;
   }
 
   // ---------------------------------------------------------------------------

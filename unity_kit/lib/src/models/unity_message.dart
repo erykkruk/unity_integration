@@ -41,6 +41,27 @@ class UnityMessage {
     );
   }
 
+  /// Creates a routed message that goes through FlutterBridge's MessageRouter.
+  ///
+  /// Instead of targeting a GameObject directly via UnitySendMessage,
+  /// this sends to FlutterBridge.ReceiveMessage() with a JSON payload
+  /// containing `target`, `method`, and `data` fields. FlutterBridge
+  /// then routes the message to the registered handler.
+  ///
+  /// Use this for C# managers that register with [MessageRouter] instead
+  /// of being standalone GameObjects (e.g. FlutterAddressablesManager).
+  factory UnityMessage.routed(
+    String target,
+    String method, [
+    Map<String, dynamic>? data,
+  ]) {
+    return _RoutedUnityMessage(
+      target: target,
+      routedMethod: method,
+      routedData: data != null ? json.encode(data) : '',
+    );
+  }
+
   /// Parses a JSON string received from Unity.
   ///
   /// Throws [FormatException] if [jsonString] is not valid JSON or
@@ -112,4 +133,33 @@ class UnityMessage {
 
   @override
   String toString() => 'UnityMessage(type: $type, data: $data)';
+}
+
+/// A message routed through FlutterBridge's MessageRouter.
+///
+/// Serializes to `{"target":"...","method":"...","data":"..."}` format
+/// which FlutterBridge parses and routes via MessageRouter.
+class _RoutedUnityMessage extends UnityMessage {
+  _RoutedUnityMessage({
+    required this.target,
+    required this.routedMethod,
+    required this.routedData,
+  }) : super(
+          type: 'routed',
+          gameObject: 'FlutterBridge',
+          method: 'ReceiveMessage',
+        );
+
+  final String target;
+  final String routedMethod;
+  final String routedData;
+
+  @override
+  String toJson() {
+    return json.encode({
+      'target': target,
+      'method': routedMethod,
+      'data': routedData,
+    });
+  }
 }
