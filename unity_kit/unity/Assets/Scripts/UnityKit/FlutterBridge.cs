@@ -46,7 +46,7 @@ namespace UnityKit
 
             var go = new GameObject("FlutterBridge");
             go.AddComponent<FlutterBridge>();
-            Debug.Log("[UnityKit] FlutterBridge auto-created");
+            UnityKitLogger.Info("FlutterBridge auto-created");
         }
 
         void Awake()
@@ -124,7 +124,7 @@ namespace UnityKit
             }
             catch (Exception e)
             {
-                Debug.LogError($"[UnityKit] Failed to parse message: {e.Message}\nJSON: {json}");
+                UnityKitLogger.Error($"Failed to parse message: {e.Message}\nJSON: {json}");
             }
         }
 
@@ -163,7 +163,7 @@ namespace UnityKit
             if (int.TryParse(frameRateStr, out var frameRate) && frameRate > 0)
             {
                 Application.targetFrameRate = frameRate;
-                Debug.Log($"[UnityKit] Target frame rate set to {frameRate}");
+                UnityKitLogger.Info($"Target frame rate set to {frameRate}");
             }
         }
 

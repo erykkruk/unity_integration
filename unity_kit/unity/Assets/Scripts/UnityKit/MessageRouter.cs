@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace UnityKit
 {
@@ -29,7 +28,7 @@ namespace UnityKit
             }
             else
             {
-                Debug.LogWarning($"[UnityKit] No handler registered for target: {target}");
+                UnityKitLogger.Warning($"No handler registered for target: {target}");
             }
         }
 

@@ -140,8 +140,6 @@ namespace UnityKit
         // -------------------------------------------------------------------
 
         private const string TARGET_NAME = "FlutterAddressablesManager";
-        private const string LOG_PREFIX = "[UnityKit] FlutterAddressablesManager";
-
         private const string METHOD_SET_CACHE_PATH = "SetCachePath";
         private const string METHOD_LOAD_ASSET = "LoadAsset";
         private const string METHOD_LOAD_SCENE = "LoadScene";
@@ -236,7 +234,7 @@ namespace UnityKit
                     break;
 
                 default:
-                    Debug.LogWarning($"{LOG_PREFIX}: Unknown method '{method}'");
+                    UnityKitLogger.Warning($"FlutterAddressablesManager: Unknown method '{method}'");
                     break;
             }
         }
@@ -246,7 +244,7 @@ namespace UnityKit
             var request = JsonUtility.FromJson<LoadAssetRequest>(data);
             if (request == null)
             {
-                Debug.LogError($"{LOG_PREFIX}: Failed to parse LoadAssetRequest");
+                UnityKitLogger.Error($"FlutterAddressablesManager: Failed to parse LoadAssetRequest");
                 return;
             }
 
@@ -264,7 +262,7 @@ namespace UnityKit
             var request = JsonUtility.FromJson<LoadSceneRequest>(data);
             if (request == null)
             {
-                Debug.LogError($"{LOG_PREFIX}: Failed to parse LoadSceneRequest");
+                UnityKitLogger.Error($"FlutterAddressablesManager: Failed to parse LoadSceneRequest");
                 return;
             }
 
@@ -282,7 +280,7 @@ namespace UnityKit
             var request = JsonUtility.FromJson<LoadContentCatalogRequest>(data);
             if (request == null)
             {
-                Debug.LogError($"{LOG_PREFIX}: Failed to parse LoadContentCatalogRequest");
+                UnityKitLogger.Error($"FlutterAddressablesManager: Failed to parse LoadContentCatalogRequest");
                 return;
             }
 
@@ -294,7 +292,7 @@ namespace UnityKit
 
             if (_loadedCatalogUrl == request.url)
             {
-                Debug.Log($"{LOG_PREFIX}: Catalog already loaded from this URL, skipping");
+                UnityKitLogger.Info($"FlutterAddressablesManager: Catalog already loaded from this URL, skipping");
                 var response = new AssetLoadedResponse
                 {
                     callbackId = request.callbackId,
@@ -321,13 +319,13 @@ namespace UnityKit
         {
             if (string.IsNullOrEmpty(path))
             {
-                Debug.LogError($"{LOG_PREFIX}: Cache path cannot be null or empty");
+                UnityKitLogger.Error($"FlutterAddressablesManager: Cache path cannot be null or empty");
                 return;
             }
 
             _cachePath = System.IO.Path.GetFullPath(path);
             _isInitialized = true;
-            Debug.Log($"{LOG_PREFIX}: Cache path set");
+            UnityKitLogger.Info($"FlutterAddressablesManager: Cache path set");
 
 #if ADDRESSABLES_INSTALLED
             // Redirect remote Addressable URLs to the Flutter-managed cache.
@@ -389,7 +387,7 @@ namespace UnityKit
 
             if (System.IO.File.Exists(cachedPath))
             {
-                Debug.Log($"{LOG_PREFIX}: Redirecting '{fileName}' to cache");
+                UnityKitLogger.Info($"FlutterAddressablesManager: Redirecting '{fileName}' to cache");
                 return cachedPath;
             }
 
@@ -461,7 +459,7 @@ namespace UnityKit
             // Addressables uses reference counting; releasing by key is not
             // directly supported. Callers must hold the handle. Log for
             // traceability.
-            Debug.Log($"{LOG_PREFIX}: Unload requested for asset: {key}");
+            UnityKitLogger.Info($"FlutterAddressablesManager: Unload requested for asset: {key}");
         }
 
         // -------------------------------------------------------------------
@@ -470,7 +468,7 @@ namespace UnityKit
 
         private IEnumerator LoadContentCatalogCoroutine(string url, string callbackId)
         {
-            Debug.Log($"{LOG_PREFIX}: Loading content catalog from: {url}");
+            UnityKitLogger.Info($"FlutterAddressablesManager: Loading content catalog from: {url}");
 
             var handle = Addressables.LoadContentCatalogAsync(url);
 
@@ -485,11 +483,11 @@ namespace UnityKit
             if (succeeded)
             {
                 _loadedCatalogUrl = url;
-                Debug.Log($"{LOG_PREFIX}: Content catalog loaded successfully");
+                UnityKitLogger.Info($"FlutterAddressablesManager: Content catalog loaded successfully");
             }
             else
             {
-                Debug.LogError($"{LOG_PREFIX}: Failed to load content catalog: {handle.OperationException?.Message}");
+                UnityKitLogger.Error($"FlutterAddressablesManager: Failed to load content catalog: {handle.OperationException?.Message}");
             }
 
             var response = new AssetLoadedResponse
@@ -530,33 +528,33 @@ namespace UnityKit
 
         private IEnumerator LoadAssetCoroutine(string key, string callbackId)
         {
-            Debug.LogWarning($"{LOG_PREFIX}: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot load asset '{key}'.");
+            UnityKitLogger.Warning($"FlutterAddressablesManager: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot load asset '{key}'.");
             SendError(callbackId, ERROR_ADDRESSABLES_NOT_INSTALLED, ERROR_TYPE_NOT_INSTALLED);
             yield break;
         }
 
         private IEnumerator LoadSceneCoroutine(string sceneName, string callbackId, string loadMode)
         {
-            Debug.LogWarning($"{LOG_PREFIX}: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot load scene '{sceneName}'.");
+            UnityKitLogger.Warning($"FlutterAddressablesManager: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot load scene '{sceneName}'.");
             SendError(callbackId, ERROR_ADDRESSABLES_NOT_INSTALLED, ERROR_TYPE_NOT_INSTALLED);
             yield break;
         }
 
         private void UnloadAsset(string key)
         {
-            Debug.LogWarning($"{LOG_PREFIX}: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot unload asset '{key}'.");
+            UnityKitLogger.Warning($"FlutterAddressablesManager: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot unload asset '{key}'.");
         }
 
         private IEnumerator LoadContentCatalogCoroutine(string url, string callbackId)
         {
-            Debug.LogWarning($"{LOG_PREFIX}: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot load content catalog.");
+            UnityKitLogger.Warning($"FlutterAddressablesManager: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot load content catalog.");
             SendError(callbackId, ERROR_ADDRESSABLES_NOT_INSTALLED, ERROR_TYPE_NOT_INSTALLED);
             yield break;
         }
 
         private IEnumerator UpdateCatalogCoroutine(string catalogUrl)
         {
-            Debug.LogWarning($"{LOG_PREFIX}: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot update catalog.");
+            UnityKitLogger.Warning($"FlutterAddressablesManager: {ERROR_ADDRESSABLES_NOT_INSTALLED}. Cannot update catalog.");
             SendError(CATALOG_UPDATE_CALLBACK_ID, ERROR_ADDRESSABLES_NOT_INSTALLED, ERROR_TYPE_NOT_INSTALLED);
             yield break;
         }
