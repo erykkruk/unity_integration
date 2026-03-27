@@ -243,8 +243,8 @@ class UnityBridgeImpl implements UnityBridge {
   Future<void> _postToPlatform(UnityMessage message) async {
     try {
       await _platform.postMessage(
-        message.gameObject,
-        message.method,
+        message.nativeGameObject,
+        message.nativeMethod,
         message.toJson(),
       );
       UnityKitLogger.instance.debug(

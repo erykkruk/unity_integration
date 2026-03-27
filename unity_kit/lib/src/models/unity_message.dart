@@ -58,7 +58,7 @@ class UnityMessage {
     return _RoutedUnityMessage(
       target: target,
       routedMethod: method,
-      routedData: data != null ? json.encode(data) : '',
+      routedData: data,
     );
   }
 
@@ -111,6 +111,18 @@ class UnityMessage {
   /// Target method name on the GameObject.
   final String method;
 
+  /// The native target for `UnitySendMessage`. Defaults to [gameObject].
+  ///
+  /// Routed messages override this to return `'FlutterBridge'` while
+  /// exposing the logical target through [gameObject].
+  String get nativeGameObject => gameObject;
+
+  /// The native method for `UnitySendMessage`. Defaults to [method].
+  ///
+  /// Routed messages override this to return `'ReceiveMessage'` while
+  /// exposing the logical method through [method].
+  String get nativeMethod => method;
+
   /// Serializes this message to a JSON string for sending to Unity.
   String toJson() {
     return json.encode({
@@ -143,8 +155,9 @@ class _RoutedUnityMessage extends UnityMessage {
   _RoutedUnityMessage({
     required this.target,
     required this.routedMethod,
-    required this.routedData,
-  }) : super(
+    required Map<String, dynamic>? routedData,
+  })  : _routedData = routedData,
+        super(
           type: 'routed',
           gameObject: 'FlutterBridge',
           method: 'ReceiveMessage',
@@ -152,14 +165,32 @@ class _RoutedUnityMessage extends UnityMessage {
 
   final String target;
   final String routedMethod;
-  final String routedData;
+  final Map<String, dynamic>? _routedData;
+
+  @override
+  String get gameObject => target;
+
+  @override
+  String get method => routedMethod;
+
+  @override
+  String get type => routedMethod;
+
+  @override
+  Map<String, dynamic>? get data => _routedData;
+
+  @override
+  String get nativeGameObject => 'FlutterBridge';
+
+  @override
+  String get nativeMethod => 'ReceiveMessage';
 
   @override
   String toJson() {
     return json.encode({
       'target': target,
       'method': routedMethod,
-      'data': routedData,
+      'data': _routedData != null ? json.encode(_routedData) : '',
     });
   }
 }

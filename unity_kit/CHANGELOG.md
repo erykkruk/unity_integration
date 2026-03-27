@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-03-27
+
+### Changed
+
+- **Stable release** — API is now considered stable. Follows Semantic Versioning from this point.
+- `_RoutedUnityMessage` now exposes logical `gameObject`, `method`, `type`, and `data` properties matching the actual target (e.g. `FlutterAddressablesManager`), while routing through `FlutterBridge.ReceiveMessage` at the native layer via `nativeGameObject`/`nativeMethod`.
+
+### Added
+
+- `UnityMessage.nativeGameObject` and `UnityMessage.nativeMethod` getters for accessing the native `UnitySendMessage` target separately from the logical message properties.
+- `UnityAssetLoader.loadContentCatalogMessage` — request Unity to load a remote content catalog by URL (Addressables).
+- "Why Addressables?" section in README — explains how dynamic content delivery keeps app size ~100 MB instead of 500 MB+.
+
+### Fixed
+
+- All 22 previously failing tests in `streaming/` and `loaders/` now pass — routed messages correctly expose target info through standard `UnityMessage` properties.
+
 ## [0.9.2] - 2026-03-18
 
 ### Fixed

@@ -37,7 +37,7 @@ and asset streaming with cache management.
 ```yaml
 # pubspec.yaml
 dependencies:
-  unity_kit: ^0.9.1
+  unity_kit: ^1.0.0
 ```
 
 Or install via command line:
@@ -606,15 +606,29 @@ Full API documentation with class signatures, parameters, and code examples:
 
 ---
 
-## Roadmap to 1.0
+## Why Addressables?
 
-This is a **pre-release** (`0.9.x`). Before `1.0.0`, the following is planned:
+Traditional Flutter + Unity apps ship **all** 3D assets inside the APK/IPA, resulting
+in app sizes of 500 MB -- several GB. With `unity_kit`'s Addressables integration,
+your app binary can stay around **~100 MB** while downloading content dynamically
+on demand.
 
-- 3D model loading utilities and prefab management helpers
-- Full step-by-step tutorial covering the complete integration flow (Unity export, Flutter setup, bridge communication, asset streaming)
-- Additional example scenes and sample Unity project
+| Approach | App size | First launch | Update strategy |
+|----------|----------|--------------|-----------------|
+| All assets in APK/IPA | 500 MB -- 3+ GB | Slow (huge download) | Full app update |
+| **Addressables + unity_kit** | **~100 MB** | Fast (base app only) | Download changed bundles only |
 
-API may change between `0.9.x` releases. Pin your version if you need stability.
+How it works:
+
+1. **Base app** ships with minimal assets (UI, loading screens).
+2. **Content bundles** (characters, levels, textures) are hosted on a CDN.
+3. `StreamingController` fetches a manifest, downloads bundles on demand,
+   caches them locally with SHA-256 integrity, and tells Unity Addressables
+   to load from the local cache.
+4. **Updates** only download changed bundles -- no full app update required.
+
+This means users get a fast install, and you can push new 3D content, levels,
+or cosmetics without going through app store review.
 
 ---
 

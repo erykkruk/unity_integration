@@ -51,6 +51,16 @@ class _TestLoader extends UnityAssetLoader {
   @override
   UnityMessage unloadAssetMessage(String key) =>
       UnityMessage.to(targetName, 'Unload', {'key': key});
+
+  @override
+  UnityMessage loadContentCatalogMessage({
+    required String url,
+    required String callbackId,
+  }) =>
+      UnityMessage.to(targetName, 'LoadContentCatalog', {
+        'url': url,
+        'callbackId': callbackId,
+      });
 }
 
 void main() {
