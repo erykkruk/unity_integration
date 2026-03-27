@@ -27,6 +27,8 @@ class MockPlatform extends UnityKitPlatform {
   Future<void> createUnityPlayer(
       int viewId, Map<String, dynamic> config) async {}
   @override
+  void registerViewChannel(int viewId) {}
+  @override
   Stream<Map<String, dynamic>> get events => const Stream.empty();
   @override
   String get viewType => 'test/unity_view';

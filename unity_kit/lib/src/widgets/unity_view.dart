@@ -195,7 +195,10 @@ class _UnityViewState extends State<UnityView> {
               creationParams: creationParams,
               creationParamsCodec: const StandardMessageCodec(),
             )
-              ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+              ..addOnPlatformViewCreatedListener((viewId) {
+                UnityKitPlatform.instance.registerViewChannel(viewId);
+                params.onPlatformViewCreated(viewId);
+              })
               ..create();
           },
         );
@@ -206,6 +209,9 @@ class _UnityViewState extends State<UnityView> {
           creationParamsCodec: const StandardMessageCodec(),
           gestureRecognizers: widget.gestureRecognizers ??
               const <Factory<OneSequenceGestureRecognizer>>{},
+          onPlatformViewCreated: (viewId) {
+            UnityKitPlatform.instance.registerViewChannel(viewId);
+          },
         );
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:

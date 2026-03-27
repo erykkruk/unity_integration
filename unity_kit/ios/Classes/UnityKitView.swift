@@ -54,7 +54,11 @@ final class UnityKitView: UIView {
             DispatchQueue.main.async { [weak self] in self?.detachUnityView() }
             return
         }
-        unityView?.removeFromSuperview()
+        // Guard: skip removal if another container already owns this view
+        // (e.g. after Flutter navigation created a new PlatformView).
+        if let uv = unityView, uv.superview === self {
+            uv.removeFromSuperview()
+        }
         unityView = nil
         layoutIfNeeded()
     }

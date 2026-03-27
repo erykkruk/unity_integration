@@ -83,6 +83,9 @@ class FakeUnityKitPlatform extends UnityKitPlatform {
   Future<void> dispose(int viewId) async {}
 
   @override
+  void registerViewChannel(int viewId) {}
+
+  @override
   Future<void> createUnityPlayer(
     int viewId,
     Map<String, dynamic> config,

@@ -11,10 +11,12 @@ Pod::Spec.new do |s|
   s.swift_version    = '5.0'
   s.dependency 'Flutter'
 
-  # UnityFramework is provided by the consuming app (symlink or vendored).
-  # Preserve it if present so the Swift compiler can find the module.
+  # UnityFramework is vendored or symlinked by the consuming app.
+  # We intentionally avoid File.symlink? here — it returns true even for
+  # broken symlinks, which causes CocoaPods to resolve the real path and
+  # crash with ENOENT when the target doesn't exist in the pub cache.
   unity_framework_path = File.join(__dir__, 'UnityFramework.framework')
-  if File.exist?(unity_framework_path) || File.symlink?(unity_framework_path)
+  if File.exist?(unity_framework_path)
     s.ios.vendored_frameworks = 'UnityFramework.framework'
     s.preserve_paths = 'UnityFramework.framework'
   end

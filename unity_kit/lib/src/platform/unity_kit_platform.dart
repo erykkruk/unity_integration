@@ -47,6 +47,10 @@ abstract class UnityKitPlatform {
   /// Create Unity player for a specific view.
   Future<void> createUnityPlayer(int viewId, Map<String, dynamic> config);
 
+  /// Bind a MethodChannel for [viewId] and set it as the active channel
+  /// for all subsequent platform calls.
+  void registerViewChannel(int viewId);
+
   /// Stream of raw events from native side.
   Stream<Map<String, dynamic>> get events;
 

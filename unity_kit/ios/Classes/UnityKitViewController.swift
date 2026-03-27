@@ -296,6 +296,11 @@ public final class UnityKitViewController: NSObject, FlutterPlatformView, UnityE
 
         if let unityView = UnityPlayerManager.shared.getView() {
             containerView.attachUnityView(unityView)
+
+            // Wake up Unity's render loop after reattachment — subsystems like
+            // AR (Vuforia) need an explicit restart after detach/reattach.
+            UnityPlayerManager.shared.restartRendering()
+
             markChannelReady()
             sendEvent(name: "onUnityCreated", data: nil)
             NSLog("[UnityKit] Unity view attached: viewId=\(viewId)")

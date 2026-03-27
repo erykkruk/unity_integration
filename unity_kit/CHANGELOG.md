@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-03-27
+
+### Fixed
+
+- **iOS: Unity view re-navigation** — `detachUnityView()` now checks `superview === self` before removing, preventing race conditions when a new container has already claimed the Unity view.
+- **iOS: Rendering restart** — added `restartRendering()` to `UnityPlayerManager` that calls `showUnityWindow()` after view reattachment, ensuring AR subsystems (e.g. Vuforia) reinitialize properly.
+- **iOS: CocoaPods dangling symlink** — podspec no longer uses `File.symlink?` which returns `true` for dangling symlinks, causing CocoaPods `realpath` to fail with ENOENT.
+- **Dart: Active view channel routing** — all platform method calls now use `_activeViewId` instead of hardcoded `0`, ensuring correct MethodChannel routing after Flutter navigation creates new platform views.
+- Added `registerViewChannel(int viewId)` to `UnityKitPlatform` — automatically called when a new platform view is created on both Android (Hybrid Composition) and iOS (UiKitView).
+
 ## [1.0.0] - 2026-03-27
 
 ### Changed

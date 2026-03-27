@@ -12,6 +12,7 @@ class UnityKitMethodChannel extends UnityKitPlatform {
   final StreamController<Map<String, dynamic>> _eventController =
       StreamController<Map<String, dynamic>>.broadcast();
   bool _isDisposed = false;
+  int _activeViewId = 0;
 
   MethodChannel _channelForView(int viewId) {
     return _channels.putIfAbsent(viewId, () {
@@ -46,12 +47,12 @@ class UnityKitMethodChannel extends UnityKitPlatform {
     // Just ensure the channel exists so we can receive events.
     // The native side auto-initializes Unity when the PlatformView is created,
     // so we don't need to send a MethodChannel call here.
-    _channelForView(0);
+    _channelForView(_activeViewId);
   }
 
   @override
   Future<bool> isReady() async {
-    final channel = _channelForView(0);
+    final channel = _channelForView(_activeViewId);
     try {
       final result = await channel.invokeMethod<bool>('unity#isReady');
       return result ?? false;
@@ -62,7 +63,7 @@ class UnityKitMethodChannel extends UnityKitPlatform {
 
   @override
   Future<bool> isLoaded() async {
-    final channel = _channelForView(0);
+    final channel = _channelForView(_activeViewId);
     try {
       final result = await channel.invokeMethod<bool>('unity#isLoaded');
       return result ?? false;
@@ -73,7 +74,7 @@ class UnityKitMethodChannel extends UnityKitPlatform {
 
   @override
   Future<bool> isPaused() async {
-    final channel = _channelForView(0);
+    final channel = _channelForView(_activeViewId);
     try {
       final result = await channel.invokeMethod<bool>('unity#isPaused');
       return result ?? false;
@@ -88,7 +89,7 @@ class UnityKitMethodChannel extends UnityKitPlatform {
     String methodName,
     String message,
   ) async {
-    final channel = _channelForView(0);
+    final channel = _channelForView(_activeViewId);
     try {
       await channel.invokeMethod<void>('unity#postMessage', {
         'gameObject': gameObject,
@@ -103,25 +104,25 @@ class UnityKitMethodChannel extends UnityKitPlatform {
 
   @override
   Future<void> pause() async {
-    final channel = _channelForView(0);
+    final channel = _channelForView(_activeViewId);
     await channel.invokeMethod<void>('unity#pausePlayer');
   }
 
   @override
   Future<void> resume() async {
-    final channel = _channelForView(0);
+    final channel = _channelForView(_activeViewId);
     await channel.invokeMethod<void>('unity#resumePlayer');
   }
 
   @override
   Future<void> unload() async {
-    final channel = _channelForView(0);
+    final channel = _channelForView(_activeViewId);
     await channel.invokeMethod<void>('unity#unloadPlayer');
   }
 
   @override
   Future<void> quit() async {
-    final channel = _channelForView(0);
+    final channel = _channelForView(_activeViewId);
     await channel.invokeMethod<void>('unity#quitPlayer');
   }
 
@@ -149,6 +150,12 @@ class UnityKitMethodChannel extends UnityKitPlatform {
   ) async {
     final channel = _channelForView(viewId);
     await channel.invokeMethod<void>('unity#createPlayer', config);
+  }
+
+  @override
+  void registerViewChannel(int viewId) {
+    _channelForView(viewId);
+    _activeViewId = viewId;
   }
 
   @override
