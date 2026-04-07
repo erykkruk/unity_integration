@@ -8,7 +8,7 @@ version = "0.9.1"
 
 android {
     namespace = "com.unity_kit"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 21
@@ -27,9 +27,9 @@ android {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("androidx.lifecycle:lifecycle-common:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-process:2.7.0")
-    implementation("androidx.annotation:annotation:1.7.1")
+    implementation("androidx.lifecycle:lifecycle-common:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-process:2.8.7")
+    implementation("androidx.annotation:annotation:1.9.1")
     compileOnly(group = "", name = "unity-classes", ext = "jar") // provided by Unity at runtime via flatDir
 
     val lifecycleProject = rootProject.findProject(":flutter_plugin_android_lifecycle")
