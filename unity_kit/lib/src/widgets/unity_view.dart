@@ -161,12 +161,21 @@ class _UnityViewState extends State<UnityView> {
   }
 
   Widget _buildPlatformView() {
+    if (widget.config.transparentBackground &&
+        defaultTargetPlatform == TargetPlatform.android) {
+      UnityKitLogger.instance.warning(
+        'UnityConfig.transparentBackground is an iOS-only feature; '
+        'the flag is ignored on Android.',
+      );
+    }
+
     final creationParams = <String, dynamic>{
       'fullscreen': widget.config.fullscreen,
       'hideStatusBar': widget.config.hideStatusBar,
       'runImmediately': widget.config.runImmediately,
       'platformViewMode': widget.config.platformViewMode.name,
       'targetFrameRate': widget.config.targetFrameRate,
+      'transparentBackground': widget.config.transparentBackground,
     };
 
     final gestureRecognizers = widget.gestureRecognizers ??

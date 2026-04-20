@@ -64,7 +64,12 @@ public final class UnityKitViewController: NSObject, FlutterPlatformView, UnityE
         args: Any?
     ) {
         self.viewId = viewId
-        self.containerView = UnityKitView(frame: frame)
+        let transparentBackground =
+            (args as? [String: Any])?["transparentBackground"] as? Bool ?? false
+        self.containerView = UnityKitView(
+            frame: frame,
+            transparentBackground: transparentBackground
+        )
 
         let channelName = "com.unity_kit/unity_view_\(viewId)"
         self.channel = FlutterMethodChannel(name: channelName, binaryMessenger: messenger)

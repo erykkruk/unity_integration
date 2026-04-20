@@ -20,14 +20,19 @@ class UnityConfig {
     this.runImmediately = true,
     this.targetFrameRate = 60,
     this.platformViewMode = PlatformViewMode.hybridComposition,
+    this.transparentBackground = false,
   });
 
   /// Creates config for fullscreen Unity rendering.
-  factory UnityConfig.fullscreen({String sceneName = 'MainScene'}) {
+  factory UnityConfig.fullscreen({
+    String sceneName = 'MainScene',
+    bool transparentBackground = false,
+  }) {
     return UnityConfig(
       sceneName: sceneName,
       fullscreen: true,
       hideStatusBar: true,
+      transparentBackground: transparentBackground,
     );
   }
 
@@ -52,6 +57,12 @@ class UnityConfig {
   /// Platform view rendering mode (Android only).
   final PlatformViewMode platformViewMode;
 
+  /// When true, the native view hosting Unity is marked as non-opaque
+  /// with a clear background. Combined with a Unity camera clear colour
+  /// of alpha 0, this lets Flutter widgets painted behind the Unity
+  /// surface show through. iOS-only for now.
+  final bool transparentBackground;
+
   /// Creates a copy with the given fields replaced.
   UnityConfig copyWith({
     String? sceneName,
@@ -61,6 +72,7 @@ class UnityConfig {
     bool? runImmediately,
     int? targetFrameRate,
     PlatformViewMode? platformViewMode,
+    bool? transparentBackground,
   }) {
     return UnityConfig(
       sceneName: sceneName ?? this.sceneName,
@@ -70,6 +82,8 @@ class UnityConfig {
       runImmediately: runImmediately ?? this.runImmediately,
       targetFrameRate: targetFrameRate ?? this.targetFrameRate,
       platformViewMode: platformViewMode ?? this.platformViewMode,
+      transparentBackground:
+          transparentBackground ?? this.transparentBackground,
     );
   }
 
@@ -84,7 +98,8 @@ class UnityConfig {
           hideStatusBar == other.hideStatusBar &&
           runImmediately == other.runImmediately &&
           targetFrameRate == other.targetFrameRate &&
-          platformViewMode == other.platformViewMode;
+          platformViewMode == other.platformViewMode &&
+          transparentBackground == other.transparentBackground;
 
   @override
   int get hashCode => Object.hash(
@@ -95,10 +110,14 @@ class UnityConfig {
         runImmediately,
         targetFrameRate,
         platformViewMode,
+        transparentBackground,
       );
 
   @override
   String toString() =>
       'UnityConfig(sceneName: $sceneName, fullscreen: $fullscreen, '
-      'targetFrameRate: $targetFrameRate)';
+      'unloadOnDispose: $unloadOnDispose, hideStatusBar: $hideStatusBar, '
+      'runImmediately: $runImmediately, targetFrameRate: $targetFrameRate, '
+      'platformViewMode: $platformViewMode, '
+      'transparentBackground: $transparentBackground)';
 }

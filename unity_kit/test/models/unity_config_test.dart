@@ -14,6 +14,7 @@ void main() {
       expect(config.runImmediately, isTrue);
       expect(config.targetFrameRate, 60);
       expect(config.platformViewMode, PlatformViewMode.hybridComposition);
+      expect(config.transparentBackground, isFalse);
     });
 
     test('accepts custom values', () {
@@ -25,6 +26,7 @@ void main() {
         runImmediately: false,
         targetFrameRate: 30,
         platformViewMode: PlatformViewMode.virtualDisplay,
+        transparentBackground: true,
       );
 
       expect(config.sceneName, 'TestScene');
@@ -34,6 +36,7 @@ void main() {
       expect(config.runImmediately, isFalse);
       expect(config.targetFrameRate, 30);
       expect(config.platformViewMode, PlatformViewMode.virtualDisplay);
+      expect(config.transparentBackground, isTrue);
     });
 
     group('fullscreen factory', () {
@@ -49,6 +52,13 @@ void main() {
         final config = UnityConfig.fullscreen(sceneName: 'GameScene');
 
         expect(config.sceneName, 'GameScene');
+        expect(config.fullscreen, isTrue);
+      });
+
+      test('accepts transparentBackground override', () {
+        final config = UnityConfig.fullscreen(transparentBackground: true);
+
+        expect(config.transparentBackground, isTrue);
         expect(config.fullscreen, isTrue);
       });
     });
@@ -84,6 +94,40 @@ void main() {
         );
 
         expect(copy.platformViewMode, PlatformViewMode.textureLayer);
+      });
+
+      test('copies transparentBackground', () {
+        const original = UnityConfig();
+        final copy = original.copyWith(transparentBackground: true);
+
+        expect(copy.transparentBackground, isTrue);
+        expect(original.transparentBackground, isFalse);
+      });
+    });
+
+    group('equality', () {
+      test('identical configs are equal', () {
+        const a = UnityConfig(transparentBackground: true);
+        const b = UnityConfig(transparentBackground: true);
+
+        expect(a, equals(b));
+        expect(a.hashCode, equals(b.hashCode));
+      });
+
+      test('configs differ on transparentBackground', () {
+        const opaque = UnityConfig();
+        const transparent = UnityConfig(transparentBackground: true);
+
+        expect(opaque, isNot(equals(transparent)));
+        expect(opaque.hashCode, isNot(equals(transparent.hashCode)));
+      });
+    });
+
+    group('toString', () {
+      test('includes transparentBackground', () {
+        const config = UnityConfig(transparentBackground: true);
+
+        expect(config.toString(), contains('transparentBackground: true'));
       });
     });
   });

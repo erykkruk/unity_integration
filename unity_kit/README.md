@@ -24,6 +24,7 @@ and asset streaming with cache management.
 | **Message Throttling** | Rate-limits outgoing messages with configurable strategy (drop, keepLatest, keepFirst) |
 | **Asset Streaming** | Manifest-based content downloading with SHA-256 integrity, local caching, and Unity Addressables integration |
 | **Platform Views** | Android (HybridComposition / VirtualDisplay / TextureLayer) and iOS (UiKitView) support |
+| **Transparent Rendering** | iOS: render Unity on top of Flutter widgets via `UnityConfig.transparentBackground` + alpha-0 camera clear |
 | **Scene Tracking** | Automatic scene load/unload events streamed from Unity to Flutter |
 | **Message Routing** | Register type-specific callbacks with `MessageHandler` for clean event dispatching |
 | **Structured Exceptions** | Exception hierarchy: `UnityKitException` -> `BridgeException`, `CommunicationException`, `LifecycleException`, `EngineNotReadyException` |
@@ -37,7 +38,7 @@ and asset streaming with cache management.
 ```yaml
 # pubspec.yaml
 dependencies:
-  unity_kit: ^1.0.3
+  unity_kit: ^1.1.0
 ```
 
 Or install via command line:
@@ -263,6 +264,7 @@ const config = UnityConfig(
   runImmediately: true,         // Start player immediately (default: true)
   targetFrameRate: 60,          // Target FPS (default: 60)
   platformViewMode: PlatformViewMode.hybridComposition, // Android only
+  transparentBackground: false, // Transparent Unity layer on iOS (default: false)
 );
 
 // Convenience factory for fullscreen
@@ -279,6 +281,31 @@ final modified = config.copyWith(targetFrameRate: 30);
 | `hybridComposition` | Good | Best | Default. Recommended for most cases. |
 | `virtualDisplay` | Better | Good | Potential z-ordering and input issues. |
 | `textureLayer` | Best | Limited | Limited platform support. |
+
+### Transparent Unity layer (iOS)
+
+Set `transparentBackground: true` to render Unity on top of Flutter widgets
+without an opaque background. The native iOS container (and the Unity root
+view hierarchy) are marked `isOpaque = false` with a clear background colour.
+
+**Unity side — required** (without this the camera still paints a solid colour
+behind your 3D objects):
+
+1. Select your scene's main camera.
+2. Set **Clear Flags** → `Solid Color`.
+3. Set **Background** → RGBA `(0, 0, 0, 0)` (alpha must be `0`).
+
+```dart
+UnityView(
+  config: const UnityConfig(
+    sceneName: 'AvatarScene',
+    transparentBackground: true,
+  ),
+)
+```
+
+> **Note:** iOS only. On Android the flag is ignored and a warning is logged
+> via `UnityKitLogger`. Raise an issue if you need Android support.
 
 ---
 

@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-20
+
+### Added
+- `UnityConfig.transparentBackground` flag that renders the native Unity
+  container non-opaque on iOS so Flutter widgets painted behind the
+  platform view can show through. Requires the Unity scene camera's
+  clear colour to use alpha `0`.
+- `UnityConfig.fullscreen()` factory now accepts `transparentBackground`.
+- iOS `UnityKitView` recursively applies `isOpaque = false` and a clear
+  background to the Unity root view hierarchy when the flag is enabled.
+
+### Changed
+- `UnityConfig.toString()` now reports every field, including
+  `transparentBackground`, so it stays in sync with `==` / `hashCode`.
+- `UnityView` logs a warning via `UnityKitLogger` when
+  `transparentBackground` is enabled on Android (iOS-only feature).
+
 ## [1.0.3] - 2026-04-07
 
 ### Changed

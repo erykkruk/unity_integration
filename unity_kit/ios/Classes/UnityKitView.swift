@@ -5,12 +5,35 @@ import UIKit
 /// Responsibilities:
 /// - Keeps the Unity root view sized to match this container via layout passes.
 /// - Forwards touch events to the Unity view so gestures work correctly.
+/// - Optionally renders transparently so Flutter widgets painted behind the
+///   platform view can show through (requires the Unity scene's camera to
+///   also use a clear colour with alpha 0).
 final class UnityKitView: UIView {
 
     // MARK: - Properties
 
     /// The Unity root view currently attached as a subview.
     private weak var unityView: UIView?
+
+    /// When true, this container and any attached Unity view are marked
+    /// non-opaque with a clear background.
+    private let transparentBackground: Bool
+
+    // MARK: - Init
+
+    init(frame: CGRect, transparentBackground: Bool = false) {
+        self.transparentBackground = transparentBackground
+        super.init(frame: frame)
+        if transparentBackground {
+            isOpaque = false
+            backgroundColor = .clear
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        self.transparentBackground = false
+        super.init(coder: coder)
+    }
 
     // MARK: - Layout
 
@@ -42,6 +65,7 @@ final class UnityKitView: UIView {
         unityView = view
         view.frame = bounds
         view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        applyTransparencyIfNeeded(to: view)
         addSubview(view)
         layoutIfNeeded()
     }
@@ -61,6 +85,22 @@ final class UnityKitView: UIView {
         }
         unityView = nil
         layoutIfNeeded()
+    }
+
+    // MARK: - Transparency
+
+    /// Recursively mark the attached Unity view (and its subviews) as
+    /// non-opaque with a clear background. Unity's root view is a plain
+    /// `UIView` hosting Metal/OpenGL layers — once all levels of the
+    /// hierarchy report `isOpaque = false`, the GPU compositor honours
+    /// the camera's alpha 0 clear and lets Flutter content show through.
+    private func applyTransparencyIfNeeded(to view: UIView) {
+        guard transparentBackground else { return }
+        view.isOpaque = false
+        view.backgroundColor = .clear
+        for subview in view.subviews {
+            applyTransparencyIfNeeded(to: subview)
+        }
     }
 
     // MARK: - Touch Forwarding
